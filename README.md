@@ -18,7 +18,7 @@ URL shortener service similar to tinyurl, service which generates shorter url fr
 * Generated short url shouldn't be lost, tampered or expired
 * Service should be able to support 100 million URL shortening requests per month
 * Service uptime should 100%
-* URL redirection shouldn't be fast and shouldn't degrade over time
+* URL redirection should be fast and shouldn't degrade over time
 * Service should support increasing load and shouldn't behave differently in peak times
 * Service should be able scalable
 
