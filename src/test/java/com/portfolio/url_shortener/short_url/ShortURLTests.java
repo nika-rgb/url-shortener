@@ -1,6 +1,8 @@
-package com.portfolio.url_shortener;
+package com.portfolio.url_shortener.short_url;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.portfolio.url_shortener.JsonHelper;
+import com.portfolio.url_shortener.ShortURLResponse;
 import com.portfolio.url_shortener.short_url.api.v1.ShortURLRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -45,12 +48,7 @@ public class ShortURLTests {
 
         ShortURLRequest request = new ShortURLRequest(ORIGINAL_URL);
 
-        mockMvc.perform(
-                        post(GENERATE_SHORT_URL_PATH)
-                                .content(objectMapper.writeValueAsBytes(request))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk());
+        mockMvc.perform(post(GENERATE_SHORT_URL_PATH).content(objectMapper.writeValueAsBytes(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
     }
 
     @Test
@@ -119,29 +117,27 @@ public class ShortURLTests {
         assertEquals(ORIGINAL_URL, originalURL.toString());
     }
 
+    @Test
+    @Sql(scripts = "classpath:ShortURLData.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    void persistedUrlShouldBeRedirected() throws Exception {
+        URL shortURL = new URL("https://url-shortener/api/v1/aa2345bb");
+
+        URL originalURL = sendRedirectRequest(shortURL);
+
+        assertNotNull(originalURL);
+        assertEquals(ORIGINAL_URL, originalURL.toString());
+    }
+
+
     private URL sendRedirectRequest(URL shortUrl) throws Exception {
-        MvcResult result = mockMvc.perform(
-                get(shortUrl.toString())
-        ).andExpect(
-                status().is(HttpStatus.FOUND.value())
-        ).andExpect(
-                header().exists(HttpHeaders.LOCATION)
-        ).andReturn();
+        MvcResult result = mockMvc.perform(get(shortUrl.toString())).andExpect(status().is(HttpStatus.FOUND.value())).andExpect(header().exists(HttpHeaders.LOCATION)).andReturn();
 
         return new URL(Objects.requireNonNull(result.getResponse().getHeader(HttpHeaders.LOCATION)));
     }
 
 
     private ShortURLResponse sendGenerateShortUrlRequest(ShortURLRequest request) throws Exception {
-        MvcResult result = mockMvc.perform(
-                        post(GENERATE_SHORT_URL_PATH)
-                                .content(objectMapper.writeValueAsBytes(request))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(
-                        status().isOk()
-                )
-                .andReturn();
+        MvcResult result = mockMvc.perform(post(GENERATE_SHORT_URL_PATH).content(objectMapper.writeValueAsBytes(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
 
         return JsonHelper.getResponse(result.getResponse().getContentAsString(), objectMapper, ShortURLResponse.class);
     }

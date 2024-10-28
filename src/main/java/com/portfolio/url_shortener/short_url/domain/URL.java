@@ -20,13 +20,13 @@ public record URL(@JsonValue String url) {
     }
 
     public URL(String baseUrl, String path) {
-        this(baseUrl.concat(DELIMITER).concat(path));
+        this(baseUrl.concat(path));
     }
 
     public URL(String baseUrl, String ... pathParts) {
         this(
                 Arrays.stream(pathParts)
-                        .collect(Collectors.joining(DELIMITER, baseUrl + DELIMITER, ""))
+                        .collect(Collectors.joining(DELIMITER, baseUrl, ""))
         );
     }
 

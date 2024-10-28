@@ -18,7 +18,7 @@ public class ShortURL {
     private URL originalUrl;
 
     @Embedded
-    @AttributeOverride(name = "url", column = @Column(name = "shortUrl", nullable = false, updatable = false, length = 50))
+    @AttributeOverride(name = "url", column = @Column(name = "shortUrl", nullable = false, updatable = false, length = 50, unique = true))
     private URL shortUrl;
 
     @CreationTimestamp
