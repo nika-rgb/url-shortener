@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "SHORT_URL")
 public class ShortURL {
 
+    public static final String URL_DELIMETER = "/";
     @EmbeddedId
     private ShortUrlId id;
 
@@ -17,7 +18,7 @@ public class ShortURL {
     private URL originalUrl;
 
     @Embedded
-    @AttributeOverride(name = "url", column = @Column(name = "shortUrl", nullable = false, updatable = false, length = 30))
+    @AttributeOverride(name = "url", column = @Column(name = "shortUrl", nullable = false, updatable = false, length = 50))
     private URL shortUrl;
 
     @CreationTimestamp
@@ -29,7 +30,7 @@ public class ShortURL {
 
     public ShortURL(URL originalUrl, URL shortUrl, URLShortenerConfiguration configuration) {
 
-        if (!configuration.getGeneratedUrlLength().equals(getPath(shortUrl).length() - 1)) {
+        if (!configuration.getGeneratedUrlLength().equals(getGeneratedPath(shortUrl).length() - 1)) {
             throw new IllegalArgumentException("Invalid short URL generated");
         }
 
@@ -38,9 +39,11 @@ public class ShortURL {
         this.createdAt = LocalDateTime.now();
     }
 
-    private String getPath(URL shortUrl) {
+    private String getGeneratedPath(URL shortUrl) {
         try {
-            return new java.net.URL(shortUrl.url()).getPath();
+            String fullPath = new java.net.URL(shortUrl.url()).getPath();
+            // Return only the generated part of full path
+            return fullPath.substring(fullPath.lastIndexOf(URL_DELIMETER));
         } catch (Exception ignore){
             return "";
         }

@@ -16,6 +16,9 @@ public class URLShortenerConfiguration {
     @URL
     private String baseUrl;
     @NotNull
+    @URL
+    private String redirectBasePath;
+    @NotNull
     @Positive
     private Integer generatedUrlLength;
     @NotNull
@@ -44,6 +47,14 @@ public class URLShortenerConfiguration {
 
     public void setHost(String host) {
         this.host = host;
+    }
+
+    public String getRedirectBasePath() {
+        return redirectBasePath;
+    }
+
+    public void setRedirectBasePath(String redirectBasePath) {
+        this.redirectBasePath = redirectBasePath;
     }
 
     public Integer getGeneratedUrlLength() {

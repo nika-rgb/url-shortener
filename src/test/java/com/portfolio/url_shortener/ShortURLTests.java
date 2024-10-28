@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,14 +18,17 @@ import java.net.URL;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 public class ShortURLTests {
-    public static final String GENERATE_SHORT_URL_PATH = "/api/v1/url-shortener/generate";
+    public static final String GENERATE_SHORT_URL_PATH = "/api/v1/generate";
+    public static final String URL_DELIMETER = "/";
     private static final String ORIGINAL_URL = "https://surplus2g.ci/parameters";
     @Autowired
     private MockMvc mockMvc;
@@ -80,7 +85,10 @@ public class ShortURLTests {
 
         URL urlObject = new URL(response.shortUrl());
 
-        assertEquals(generatedUrlPathLength + 1, urlObject.getPath().length());
+        String fullPath = urlObject.getPath();
+        String generatedPath = fullPath.substring(fullPath.lastIndexOf(URL_DELIMETER));
+
+        assertEquals(generatedUrlPathLength + 1, generatedPath.length());
     }
 
     @Test
@@ -99,6 +107,30 @@ public class ShortURLTests {
         assertNotEquals(firstUrlObject.getPath(), secondUrlObject.getPath());
     }
 
+    @Test
+    void generatedUrlShouldBePersisted() throws Exception {
+        ShortURLRequest request = new ShortURLRequest(ORIGINAL_URL);
+
+        ShortURLResponse generateURLResponse = sendGenerateShortUrlRequest(request);
+
+        URL originalURL = sendRedirectRequest(new URL(generateURLResponse.shortUrl()));
+
+        assertNotNull(originalURL);
+        assertEquals(ORIGINAL_URL, originalURL.toString());
+    }
+
+    private URL sendRedirectRequest(URL shortUrl) throws Exception {
+        MvcResult result = mockMvc.perform(
+                get(shortUrl.toString())
+        ).andExpect(
+                status().is(HttpStatus.FOUND.value())
+        ).andExpect(
+                header().exists(HttpHeaders.LOCATION)
+        ).andReturn();
+
+        return new URL(Objects.requireNonNull(result.getResponse().getHeader(HttpHeaders.LOCATION)));
+    }
+
 
     private ShortURLResponse sendGenerateShortUrlRequest(ShortURLRequest request) throws Exception {
         MvcResult result = mockMvc.perform(
@@ -106,10 +138,12 @@ public class ShortURLTests {
                                 .content(objectMapper.writeValueAsBytes(request))
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
+                .andExpect(
+                        status().isOk()
+                )
                 .andReturn();
 
-        ShortURLResponse response = JsonHelper.getResponse(result.getResponse().getContentAsString(), objectMapper, ShortURLResponse.class);
-        return response;
+        return JsonHelper.getResponse(result.getResponse().getContentAsString(), objectMapper, ShortURLResponse.class);
     }
 
 }

@@ -22,7 +22,8 @@ public class ShortenUrlUseCase {
     public ShortURLProjection generateShortUrl(String originalUrl) {
         ShortURL shortURL = new ShortURL(
                 new URL(originalUrl),
-                new URL(configuration.getBaseUrl(), urlPathGeneratorService.generateUniquePath(originalUrl, configuration.getGeneratedUrlLength())),
+                new URL(configuration.getBaseUrl(), configuration.getRedirectBasePath(),
+                        urlPathGeneratorService.generateUniquePath(originalUrl, configuration.getGeneratedUrlLength())),
                 configuration
         );
         shortURL = shortURLRepository.save(shortURL);
