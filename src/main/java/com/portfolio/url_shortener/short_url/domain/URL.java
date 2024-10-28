@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.net.MalformedURLException;
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 
 public record URL(@JsonValue String url) {
@@ -21,7 +23,16 @@ public record URL(@JsonValue String url) {
         this(baseUrl.concat(DELIMITER).concat(path));
     }
 
+    public URL(String baseUrl, String ... pathParts) {
+        this(
+                Arrays.stream(pathParts)
+                        .collect(Collectors.joining(DELIMITER, baseUrl + DELIMITER, ""))
+        );
+    }
 
+    public URL(URL otherUrl) {
+        this(otherUrl.url());
+    }
 
 
     private boolean isValid(String url) {
