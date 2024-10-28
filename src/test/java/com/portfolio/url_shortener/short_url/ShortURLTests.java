@@ -48,7 +48,11 @@ public class ShortURLTests {
 
         ShortURLRequest request = new ShortURLRequest(ORIGINAL_URL);
 
-        mockMvc.perform(post(GENERATE_SHORT_URL_PATH).content(objectMapper.writeValueAsBytes(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(
+                post(GENERATE_SHORT_URL_PATH)
+                        .content(objectMapper.writeValueAsBytes(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk());
     }
 
     @Test
@@ -130,14 +134,22 @@ public class ShortURLTests {
 
 
     private URL sendRedirectRequest(URL shortUrl) throws Exception {
-        MvcResult result = mockMvc.perform(get(shortUrl.toString())).andExpect(status().is(HttpStatus.FOUND.value())).andExpect(header().exists(HttpHeaders.LOCATION)).andReturn();
+        MvcResult result = mockMvc.perform(
+                get(shortUrl.toString())
+        ).andExpect(status().is(HttpStatus.FOUND.value()))
+                .andExpect(header().exists(HttpHeaders.LOCATION))
+                .andReturn();
 
         return new URL(Objects.requireNonNull(result.getResponse().getHeader(HttpHeaders.LOCATION)));
     }
 
 
     private ShortURLResponse sendGenerateShortUrlRequest(ShortURLRequest request) throws Exception {
-        MvcResult result = mockMvc.perform(post(GENERATE_SHORT_URL_PATH).content(objectMapper.writeValueAsBytes(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        MvcResult result = mockMvc.perform(
+                post(GENERATE_SHORT_URL_PATH)
+                        .content(objectMapper.writeValueAsBytes(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk()).andReturn();
 
         return JsonHelper.getResponse(result.getResponse().getContentAsString(), objectMapper, ShortURLResponse.class);
     }
